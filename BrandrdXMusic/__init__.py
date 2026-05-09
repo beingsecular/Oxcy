@@ -27,4 +27,6 @@ Resso = RessoAPI()
 Telegram = TeleAPI()
 YouTube = YouTubeAPI()
 
-APP = "BRANDED_KUDI_BOT"  # connect music api key "Dont change it"
+APP = "BRANDED_KUDI_BOT"
+
+SUDOERS = [123456789]
