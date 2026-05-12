@@ -26,7 +26,7 @@ LOGGER_ID = int(getenv("LOGGER_ID", "-1003530337097"))
 
 # Get this value from @BRANDRD_ROBOT on Telegram by /id
 OWNER_ID = int(getenv("OWNER_ID", None))
-
+SUDO_USERS = list(map(int, getenv("SUDO_USERS", "").split()))
 LOG = int(getenv("LOG", True))
 
 ## Fill these variables if you're deploying on heroku.
