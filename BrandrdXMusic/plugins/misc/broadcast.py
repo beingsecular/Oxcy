@@ -14,7 +14,8 @@ from pyrogram.enums import ChatMembersFilter
 from pyrogram.errors import FloodWait
 
 from BrandrdXMusic import app
-from BrandrdXMusic import SUDOERS
+
+from BrandrdXMusic.misc import SUDOERS
 from BrandrdXMusic.utils.database import (get_active_chats, get_authuser_names,
                                        get_client, get_served_chats,
                                        get_served_users)
