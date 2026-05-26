@@ -103,6 +103,7 @@ async def stream(
     spotify: Union[bool, str] = None,
     forceplay: Union[bool, str] = None,
 ):
+    from BrandrdXMusic.core.call import Hotty  # Fixed: lazy import to avoid circular import
 
     if not result:
         return
