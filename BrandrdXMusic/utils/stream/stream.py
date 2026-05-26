@@ -63,7 +63,6 @@ STREAM_VIDEOS = [
     "https://files.catbox.moe/qr1zhj.mp4",
 ]
 
-# Track which video to show next per chat
 _video_index = {}
 
 def get_next_video(chat_id):
@@ -160,6 +159,8 @@ async def stream(
                 run = await app.send_video(
                     original_chat_id,
                     video=stream_video,
+                    width=320,
+                    height=180,
                     caption=_["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{vidid}",
                         title[:18],
@@ -250,6 +251,8 @@ async def stream(
             run = await app.send_video(
                 original_chat_id,
                 video=stream_video,
+                width=320,
+                height=180,
                 caption=_["stream_1"].format(
                     f"https://t.me/{app.username}?start=info_{vidid}",
                     title[:18],
@@ -304,6 +307,8 @@ async def stream(
             run = await app.send_video(
                 original_chat_id,
                 video=stream_video,
+                width=320,
+                height=180,
                 caption=_["stream_1"].format(
                     config.SUPPORT_CHAT, title[:23], duration_min, user_name
                 ),
@@ -359,6 +364,8 @@ async def stream(
             run = await app.send_video(
                 original_chat_id,
                 video=stream_video,
+                width=320,
+                height=180,
                 caption=_["stream_1"].format(link, title[:23], duration_min, user_name),
                 reply_markup=InlineKeyboardMarkup(button),
             )
@@ -420,6 +427,8 @@ async def stream(
             run = await app.send_video(
                 original_chat_id,
                 video=stream_video,
+                width=320,
+                height=180,
                 caption=_["stream_1"].format(
                     f"https://t.me/{app.username}?start=info_{vidid}",
                     title[:23],
@@ -476,6 +485,8 @@ async def stream(
             run = await app.send_video(
                 original_chat_id,
                 video=stream_video,
+                width=320,
+                height=180,
                 caption=_["stream_2"].format(user_name),
                 reply_markup=InlineKeyboardMarkup(button),
             )
