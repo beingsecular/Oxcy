@@ -30,10 +30,8 @@ from config import BANNED_USERS, lyrical
 from time import time
 from BrandrdXMusic.utils.extraction import extract_user
 
-# Define a dictionary to track the last message timestamp for each user
 user_last_message_time = {}
 user_command_count = {}
-# Define the threshold for command spamming (e.g., 20 commands within 60 seconds)
 SPAM_THRESHOLD = 2
 SPAM_WINDOW_SECONDS = 5
 
@@ -56,6 +54,23 @@ from youtubesearchpython.__future__ import VideosSearch
 
 # Import get_thumb from thumbnails.py
 from BrandrdXMusic.utils.thumbnails import get_thumb
+
+# ===== ROTATING VIDEOS ===== #
+STREAM_VIDEOS = [
+    "https://files.catbox.moe/3h02m3.mp4",
+    "https://files.catbox.moe/jo9v5z.mp4",
+    "https://files.catbox.moe/1feop0.mp4",
+    "https://files.catbox.moe/qr1zhj.mp4",
+]
+
+# Track which video to show next per chat
+_video_index = {}
+
+def get_next_video(chat_id):
+    idx = _video_index.get(chat_id, 0)
+    video = STREAM_VIDEOS[idx % len(STREAM_VIDEOS)]
+    _video_index[chat_id] = idx + 1
+    return video
 
 
 async def stream(
@@ -140,11 +155,11 @@ async def stream(
                     "video" if video else "audio",
                     forceplay=forceplay,
                 )
-                img = await get_thumb(vidid)
+                stream_video = get_next_video(chat_id)
                 button = stream_markup(_, vidid, chat_id)
-                run = await app.send_photo(
+                run = await app.send_video(
                     original_chat_id,
-                    photo=img,
+                    video=stream_video,
                     caption=_["stream_1"].format(
                         f"https://t.me/{app.username}?start=info_{vidid}",
                         title[:18],
@@ -153,7 +168,6 @@ async def stream(
                     ),
                     reply_markup=InlineKeyboardMarkup(button),
                 )
-
                 db[chat_id][0]["mystic"] = run
                 db[chat_id][0]["markup"] = "stream"
         if count == 0:
@@ -231,11 +245,11 @@ async def stream(
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
-            img = await get_thumb(vidid)
+            stream_video = get_next_video(chat_id)
             button = stream_markup(_, vidid, chat_id)
-            run = await app.send_photo(
+            run = await app.send_video(
                 original_chat_id,
-                photo=img,
+                video=stream_video,
                 caption=_["stream_1"].format(
                     f"https://t.me/{app.username}?start=info_{vidid}",
                     title[:18],
@@ -244,7 +258,6 @@ async def stream(
                 ),
                 reply_markup=InlineKeyboardMarkup(button),
             )
-
             db[chat_id][0]["mystic"] = run
             db[chat_id][0]["markup"] = "stream"
     elif streamtype == "soundcloud":
@@ -286,10 +299,11 @@ async def stream(
                 "audio",
                 forceplay=forceplay,
             )
-            button = stream_markup2(_, chat_id)
-            run = await app.send_photo(
+            stream_video = get_next_video(chat_id)
+            button = stream_markup(_, chat_id, chat_id)
+            run = await app.send_video(
                 original_chat_id,
-                photo=config.SOUNCLOUD_IMG_URL,
+                video=stream_video,
                 caption=_["stream_1"].format(
                     config.SUPPORT_CHAT, title[:23], duration_min, user_name
                 ),
@@ -340,10 +354,11 @@ async def stream(
             )
             if video:
                 await add_active_video_chat(chat_id)
-            button = stream_markup2(_, chat_id)
-            run = await app.send_photo(
+            stream_video = get_next_video(chat_id)
+            button = stream_markup(_, chat_id, chat_id)
+            run = await app.send_video(
                 original_chat_id,
-                photo=config.TELEGRAM_VIDEO_URL if video else config.TELEGRAM_AUDIO_URL,
+                video=stream_video,
                 caption=_["stream_1"].format(link, title[:23], duration_min, user_name),
                 reply_markup=InlineKeyboardMarkup(button),
             )
@@ -400,11 +415,11 @@ async def stream(
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
-            img = await get_thumb(vidid)
-            button = stream_markup2(_, chat_id)
-            run = await app.send_photo(
+            stream_video = get_next_video(chat_id)
+            button = stream_markup(_, vidid, chat_id)
+            run = await app.send_video(
                 original_chat_id,
-                photo=img,
+                video=stream_video,
                 caption=_["stream_1"].format(
                     f"https://t.me/{app.username}?start=info_{vidid}",
                     title[:23],
@@ -456,10 +471,11 @@ async def stream(
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
-            button = stream_markup2(_, chat_id)
-            run = await app.send_photo(
+            stream_video = get_next_video(chat_id)
+            button = stream_markup(_, chat_id, chat_id)
+            run = await app.send_video(
                 original_chat_id,
-                photo=config.STREAM_IMG_URL,
+                video=stream_video,
                 caption=_["stream_2"].format(user_name),
                 reply_markup=InlineKeyboardMarkup(button),
             )
