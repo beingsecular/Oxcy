@@ -14,7 +14,6 @@ import config
 from config import BANNED_USERS, lyrical
 
 from BrandrdXMusic import Apple, Resso, SoundCloud, Spotify, Telegram, YouTube, app, Carbon
-from BrandrdXMusic.core.call import Hotty
 from BrandrdXMusic.misc import SUDOERS, db
 from BrandrdXMusic.utils import seconds_to_min, time_to_seconds
 from BrandrdXMusic.utils.channelplay import get_channeplayCB
