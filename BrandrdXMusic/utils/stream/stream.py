@@ -52,7 +52,6 @@ from BrandrdXMusic.utils.pastebin import HottyBin
 from BrandrdXMusic.utils.stream.queue import put_queue, put_queue_index
 from youtubesearchpython.__future__ import VideosSearch
 
-# Import get_thumb from thumbnails.py
 from BrandrdXMusic.utils.thumbnails import get_thumb
 
 # ===== ROTATING VIDEOS ===== #
@@ -70,6 +69,35 @@ def get_next_video(chat_id):
     video = STREAM_VIDEOS[idx % len(STREAM_VIDEOS)]
     _video_index[chat_id] = idx + 1
     return video
+
+
+async def send_stream_message(original_chat_id, chat_id, caption, button, vidid=None):
+    """Try send_video first, fallback to send_photo if fails"""
+    stream_video = get_next_video(chat_id)
+    try:
+        run = await app.send_video(
+            original_chat_id,
+            video=stream_video,
+            width=320,
+            height=180,
+            caption=caption,
+            reply_markup=InlineKeyboardMarkup(button),
+        )
+        return run
+    except Exception as e:
+        print(f"[VIDEO SEND ERROR] {e}, falling back to photo")
+        try:
+            img = await get_thumb(vidid) if vidid else config.YOUTUBE_IMG_URL
+            run = await app.send_photo(
+                original_chat_id,
+                photo=img,
+                caption=caption,
+                reply_markup=InlineKeyboardMarkup(button),
+            )
+            return run
+        except Exception as e2:
+            print(f"[PHOTO SEND ERROR] {e2}")
+            return None
 
 
 async def stream(
@@ -154,23 +182,17 @@ async def stream(
                     "video" if video else "audio",
                     forceplay=forceplay,
                 )
-                stream_video = get_next_video(chat_id)
                 button = stream_markup(_, vidid, chat_id)
-                run = await app.send_video(
-                    original_chat_id,
-                    video=stream_video,
-                    width=320,
-                    height=180,
-                    caption=_["stream_1"].format(
-                        f"https://t.me/{app.username}?start=info_{vidid}",
-                        title[:18],
-                        duration_min,
-                        user_name,
-                    ),
-                    reply_markup=InlineKeyboardMarkup(button),
+                caption = _["stream_1"].format(
+                    f"https://t.me/{app.username}?start=info_{vidid}",
+                    title[:18],
+                    duration_min,
+                    user_name,
                 )
-                db[chat_id][0]["mystic"] = run
-                db[chat_id][0]["markup"] = "stream"
+                run = await send_stream_message(original_chat_id, chat_id, caption, button, vidid)
+                if run:
+                    db[chat_id][0]["mystic"] = run
+                    db[chat_id][0]["markup"] = "stream"
         if count == 0:
             return
         else:
@@ -246,23 +268,17 @@ async def stream(
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
-            stream_video = get_next_video(chat_id)
             button = stream_markup(_, vidid, chat_id)
-            run = await app.send_video(
-                original_chat_id,
-                video=stream_video,
-                width=320,
-                height=180,
-                caption=_["stream_1"].format(
-                    f"https://t.me/{app.username}?start=info_{vidid}",
-                    title[:18],
-                    duration_min,
-                    user_name,
-                ),
-                reply_markup=InlineKeyboardMarkup(button),
+            caption = _["stream_1"].format(
+                f"https://t.me/{app.username}?start=info_{vidid}",
+                title[:18],
+                duration_min,
+                user_name,
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "stream"
+            run = await send_stream_message(original_chat_id, chat_id, caption, button, vidid)
+            if run:
+                db[chat_id][0]["mystic"] = run
+                db[chat_id][0]["markup"] = "stream"
     elif streamtype == "soundcloud":
         file_path = result["filepath"]
         title = result["title"]
@@ -302,20 +318,14 @@ async def stream(
                 "audio",
                 forceplay=forceplay,
             )
-            stream_video = get_next_video(chat_id)
             button = stream_markup(_, chat_id, chat_id)
-            run = await app.send_video(
-                original_chat_id,
-                video=stream_video,
-                width=320,
-                height=180,
-                caption=_["stream_1"].format(
-                    config.SUPPORT_CHAT, title[:23], duration_min, user_name
-                ),
-                reply_markup=InlineKeyboardMarkup(button),
+            caption = _["stream_1"].format(
+                config.SUPPORT_CHAT, title[:23], duration_min, user_name
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "tg"
+            run = await send_stream_message(original_chat_id, chat_id, caption, button)
+            if run:
+                db[chat_id][0]["mystic"] = run
+                db[chat_id][0]["markup"] = "tg"
     elif streamtype == "telegram":
         file_path = result["path"]
         link = result["link"]
@@ -359,18 +369,12 @@ async def stream(
             )
             if video:
                 await add_active_video_chat(chat_id)
-            stream_video = get_next_video(chat_id)
             button = stream_markup(_, chat_id, chat_id)
-            run = await app.send_video(
-                original_chat_id,
-                video=stream_video,
-                width=320,
-                height=180,
-                caption=_["stream_1"].format(link, title[:23], duration_min, user_name),
-                reply_markup=InlineKeyboardMarkup(button),
-            )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "tg"
+            caption = _["stream_1"].format(link, title[:23], duration_min, user_name)
+            run = await send_stream_message(original_chat_id, chat_id, caption, button)
+            if run:
+                db[chat_id][0]["mystic"] = run
+                db[chat_id][0]["markup"] = "tg"
     elif streamtype == "live":
         link = result["link"]
         vidid = result["vidid"]
@@ -422,23 +426,17 @@ async def stream(
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
-            stream_video = get_next_video(chat_id)
             button = stream_markup(_, vidid, chat_id)
-            run = await app.send_video(
-                original_chat_id,
-                video=stream_video,
-                width=320,
-                height=180,
-                caption=_["stream_1"].format(
-                    f"https://t.me/{app.username}?start=info_{vidid}",
-                    title[:23],
-                    duration_min,
-                    user_name,
-                ),
-                reply_markup=InlineKeyboardMarkup(button),
+            caption = _["stream_1"].format(
+                f"https://t.me/{app.username}?start=info_{vidid}",
+                title[:23],
+                duration_min,
+                user_name,
             )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "tg"
+            run = await send_stream_message(original_chat_id, chat_id, caption, button, vidid)
+            if run:
+                db[chat_id][0]["mystic"] = run
+                db[chat_id][0]["markup"] = "tg"
     elif streamtype == "index":
         link = result
         title = "ɪɴᴅᴇx ᴏʀ ᴍ3ᴜ8 ʟɪɴᴋ"
@@ -480,16 +478,10 @@ async def stream(
                 "video" if video else "audio",
                 forceplay=forceplay,
             )
-            stream_video = get_next_video(chat_id)
             button = stream_markup(_, chat_id, chat_id)
-            run = await app.send_video(
-                original_chat_id,
-                video=stream_video,
-                width=320,
-                height=180,
-                caption=_["stream_2"].format(user_name),
-                reply_markup=InlineKeyboardMarkup(button),
-            )
-            db[chat_id][0]["mystic"] = run
-            db[chat_id][0]["markup"] = "tg"
+            caption = _["stream_2"].format(user_name)
+            run = await send_stream_message(original_chat_id, chat_id, caption, button)
+            if run:
+                db[chat_id][0]["mystic"] = run
+                db[chat_id][0]["markup"] = "tg"
             await mystic.delete()
