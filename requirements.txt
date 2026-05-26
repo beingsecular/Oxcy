@@ -1,4 +1,4 @@
-opencv-python-headless==4.10.0.84
+jiopencv-python-headless==4.10.0.84
 telethon==1.36.0
 aiofiles
 apscheduler
@@ -39,7 +39,7 @@ bing_image_downloader
 Flask
 
 # New YT
-py-yt-search==0.5.4
+py-yt-search
 youtube-search-python==1.6.6
 httpx==0.27.0
 
