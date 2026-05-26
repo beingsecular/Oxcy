@@ -66,7 +66,22 @@ def stream_markup_timer(_, vidid, chat_id, played, dur):
             InlineKeyboardButton(text="‣‣I", callback_data=f"ADMIN Skip|{chat_id}"),
             InlineKeyboardButton(text="▢", callback_data=f"ADMIN Stop|{chat_id}"),
         ],
-        [InlineKeyboardButton(text="🗑 ᴄʟᴏsᴇ", callback_data="close")],
+        [
+            InlineKeyboardButton(
+                text="🎵 ᴛᴜɴᴇs",
+                callback_data=f"ADMIN Queue|{chat_id}",
+            ),
+            InlineKeyboardButton(
+                text="🏠 ʜᴏᴍᴇ",
+                url="https://t.me/candy_xbot",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="🗑 ᴄʟᴏsᴇ",
+                callback_data=f"ADMIN Stop|{chat_id}",
+            )
+        ],
     ]
 
 
@@ -87,13 +102,13 @@ def stream_markup(_, videoid, chat_id):
             ),
             InlineKeyboardButton(
                 text="🏠 ʜᴏᴍᴇ",
-                url=f"https://t.me/{videoid}",
+                url="https://t.me/candy_xbot",
             ),
         ],
         [
             InlineKeyboardButton(
                 text="🗑 ᴄʟᴏsᴇ",
-                callback_data="close",
+                callback_data=f"ADMIN Stop|{chat_id}",
             )
         ],
     ]
