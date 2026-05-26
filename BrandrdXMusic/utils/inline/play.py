@@ -1,6 +1,19 @@
 import math
+from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton
 from BrandrdXMusic.utils.formatters import time_to_seconds
+
+
+# =========================
+# CLOSE BUTTON HANDLER (FIX)
+# =========================
+@Client.on_callback_query(filters.regex("^forceclose"))
+async def force_close(_, query):
+    try:
+        await query.answer()
+        await query.message.delete()
+    except:
+        pass
 
 
 # =========================
