@@ -1,16 +1,24 @@
-FROM python:3.10-slim-bullseye
+FROM python:3.10-slim
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-WORKDIR /app/
+WORKDIR /app
 
-COPY . /app/
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ffmpeg \
+    git \
+    gcc \
+    build-essential && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --upgrade pip setuptools
+COPY requirements.txt .
 
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
 
-CMD ["python3", "-m", "BrandrdXMusic"]
+COPY . .
+
+CMD ["python", "-m", "BrandrdXMusic"]
