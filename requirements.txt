@@ -49,3 +49,5 @@ py-yt-search==0.5.4
 youtube-search-python>=1.6.6
 youtube-search>=2.1.2
 httpx>=0.27.0
+
+kurigram
