@@ -56,10 +56,7 @@ from BrandrdXMusic.utils.thumbnails import get_thumb
 
 # ===== ROTATING VIDEOS ===== #
 STREAM_VIDEOS = [
-    "https://files.catbox.moe/3h02m3.mp4",
-    "https://files.catbox.moe/jo9v5z.mp4",
-    "https://files.catbox.moe/1feop0.mp4",
-    "https://files.catbox.moe/qr1zhj.mp4",
+    "https://files.catbox.moe/ne11i8.mp4",
 ]
 
 _video_index = {}
