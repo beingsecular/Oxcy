@@ -4,6 +4,8 @@ from typing import Union
 import random
 import string
 import asyncio
+import aiohttp
+import tempfile
 from pyrogram import client, filters
 from pyrogram.types import InlineKeyboardMarkup, InputMediaPhoto, Message
 from pytgcalls.exceptions import NoActiveGroupCall
@@ -57,6 +59,9 @@ from BrandrdXMusic.utils.thumbnails import get_thumb
 # ===== ROTATING VIDEOS ===== #
 STREAM_VIDEOS = [
     "https://files.catbox.moe/ne11i8.mp4",
+    "https://files.catbox.moe/s1s41o.mp4",
+    "https://files.catbox.moe/kuh85t.mp4",
+    "https://files.catbox.moe/rqnuxl.MP4",
 ]
 
 _video_index = {}
@@ -68,19 +73,51 @@ def get_next_video(chat_id):
     return video
 
 
+async def download_video_locally(url: str) -> str:
+    """Download video from URL to local temp file, return local path"""
+    ext = url.split(".")[-1].lower()
+    if ext not in ["mp4", "mkv", "webm"]:
+        ext = "mp4"
+
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}")
+    tmp_path = tmp.name
+    tmp.close()
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                with open(tmp_path, "wb") as f:
+                    while True:
+                        chunk = await resp.content.read(1024 * 64)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+    return tmp_path
+
+
 async def send_stream_message(original_chat_id, chat_id, caption, button, vidid=None):
-    """Try send_video first, fallback to send_photo if fails"""
-    stream_video = get_next_video(chat_id)
+    """Download video locally, send to group, fallback to photo if fails"""
+    stream_video_url = get_next_video(chat_id)
+
     try:
+        local_path = await download_video_locally(stream_video_url)
+
         run = await app.send_video(
             original_chat_id,
-            video=stream_video,
+            video=local_path,
             width=320,
             height=180,
             caption=caption,
             reply_markup=InlineKeyboardMarkup(button),
         )
+
+        try:
+            os.remove(local_path)
+        except:
+            pass
+
         return run
+
     except Exception as e:
         print(f"[VIDEO SEND ERROR] {e}, falling back to photo")
         try:
@@ -193,7 +230,7 @@ async def stream(
         if count == 0:
             return
         else:
-            link = await brandedBin(msg)
+            link = await HottyBin(msg)
             lines = msg.count("\n")
             if lines >= 17:
                 car = os.linesep.join(msg.split(os.linesep)[:17])
