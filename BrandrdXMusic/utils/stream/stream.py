@@ -65,17 +65,6 @@ STREAM_VIDEOS = [
 ]
 
 _video_index = {}
-_video_cache = {}       # Cache: url -> local path (sirf ek baar download)
-_http_session = None    # Reusable aiohttp session
-
-
-async def get_http_session():
-    """Ek hi session reuse karo, baar baar nahi banao"""
-    global _http_session
-    if _http_session is None or _http_session.closed:
-        _http_session = aiohttp.ClientSession()
-    return _http_session
-
 
 def get_next_video(chat_id):
     idx = _video_index.get(chat_id, 0)
@@ -85,20 +74,8 @@ def get_next_video(chat_id):
 
 
 async def download_video_locally(url: str) -> str:
-    """
-    Video download karo with caching.
-    Same URL baar baar download nahi hogi - Heroku quota bachega.
-    """
-    # Pehle cache check karo
-    if url in _video_cache:
-        cached_path = _video_cache[url]
-        if os.path.exists(cached_path):
-            return cached_path
-        else:
-            # File delete ho gayi (dyno restart etc), cache saaf karo
-            del _video_cache[url]
-
-    ext = url.split(".")[-1].lower().split("?")[0]
+    """Download video from URL to local temp file, return local path"""
+    ext = url.split(".")[-1].lower()
     if ext not in ["mp4", "mkv", "webm"]:
         ext = "mp4"
 
@@ -106,35 +83,20 @@ async def download_video_locally(url: str) -> str:
     tmp_path = tmp.name
     tmp.close()
 
-    try:
-        session = await get_http_session()
+    async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status == 200:
                 with open(tmp_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(64 * 1024):
+                    while True:
+                        chunk = await resp.content.read(1024 * 64)
+                        if not chunk:
+                            break
                         f.write(chunk)
-            else:
-                raise Exception(f"HTTP {resp.status} for {url}")
-
-        # Cache mein store karo taaki agli baar download na ho
-        _video_cache[url] = tmp_path
-        return tmp_path
-
-    except Exception as e:
-        # Failure pe temp file saaf karo
-        try:
-            os.remove(tmp_path)
-        except:
-            pass
-        raise e
+    return tmp_path
 
 
 async def send_stream_message(original_chat_id, chat_id, caption, button, vidid=None):
-    """
-    Pehle video bhejne ki koshish karo (cached).
-    Fail hone pe photo fallback.
-    Cached file delete nahi hogi - Heroku quota bachega.
-    """
+    """Download video locally, send to group, fallback to photo if fails"""
     stream_video_url = get_next_video(chat_id)
 
     try:
@@ -148,7 +110,12 @@ async def send_stream_message(original_chat_id, chat_id, caption, button, vidid=
             caption=caption,
             reply_markup=InlineKeyboardMarkup(button),
         )
-        # NOTE: Cached file delete mat karo - agli baar reuse hogi
+
+        try:
+            os.remove(local_path)
+        except:
+            pass
+
         return run
 
     except Exception as e:
