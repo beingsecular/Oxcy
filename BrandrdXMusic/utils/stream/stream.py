@@ -56,82 +56,21 @@ from youtubesearchpython.__future__ import VideosSearch
 
 from BrandrdXMusic.utils.thumbnails import get_thumb
 
-# ===== ROTATING VIDEOS ===== #
-STREAM_VIDEOS = [
-    "https://files.catbox.moe/ne11i8.mp4",
-    "https://files.catbox.moe/s1s41o.mp4",
-    "https://files.catbox.moe/kuh85t.mp4",
-    "https://files.catbox.moe/rqnuxl.MP4",
-]
-
-_video_index = {}
-
-def get_next_video(chat_id):
-    idx = _video_index.get(chat_id, 0)
-    video = STREAM_VIDEOS[idx % len(STREAM_VIDEOS)]
-    _video_index[chat_id] = idx + 1
-    return video
-
-
-async def download_video_locally(url: str) -> str:
-    """Download video from URL to local temp file, return local path"""
-    ext = url.split(".")[-1].lower()
-    if ext not in ["mp4", "mkv", "webm"]:
-        ext = "mp4"
-
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}")
-    tmp_path = tmp.name
-    tmp.close()
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            if resp.status == 200:
-                with open(tmp_path, "wb") as f:
-                    while True:
-                        chunk = await resp.content.read(1024 * 64)
-                        if not chunk:
-                            break
-                        f.write(chunk)
-    return tmp_path
-
 
 async def send_stream_message(original_chat_id, chat_id, caption, button, vidid=None):
-    """Download video locally, send to group, fallback to photo if fails"""
-    stream_video_url = get_next_video(chat_id)
-
+    """Send thumbnail photo as stream message"""
     try:
-        local_path = await download_video_locally(stream_video_url)
-
-        run = await app.send_video(
+        img = await get_thumb(vidid) if vidid else config.YOUTUBE_IMG_URL
+        run = await app.send_photo(
             original_chat_id,
-            video=local_path,
-            width=320,
-            height=180,
+            photo=img,
             caption=caption,
             reply_markup=InlineKeyboardMarkup(button),
         )
-
-        try:
-            os.remove(local_path)
-        except:
-            pass
-
         return run
-
     except Exception as e:
-        print(f"[VIDEO SEND ERROR] {e}, falling back to photo")
-        try:
-            img = await get_thumb(vidid) if vidid else config.YOUTUBE_IMG_URL
-            run = await app.send_photo(
-                original_chat_id,
-                photo=img,
-                caption=caption,
-                reply_markup=InlineKeyboardMarkup(button),
-            )
-            return run
-        except Exception as e2:
-            print(f"[PHOTO SEND ERROR] {e2}")
-            return None
+        print(f"[PHOTO SEND ERROR] {e}")
+        return None
 
 
 async def stream(
